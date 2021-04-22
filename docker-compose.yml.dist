@@ -1,0 +1,43 @@
+version: "3.3"
+
+services:
+	postgres:
+		image: postgres:12
+		environment:
+			- POSTGRES_DB=postgres
+			- POSTGRES_USER=postgres
+			- POSTGRES_PASSWORD=postgres
+		ports:
+			- 5432:5432
+		volumes:
+			- volume-potgre:/var/lib/postgresql:rw
+			- volume-postgre-data:/var/lib/postgresql/data:rw
+		networks:
+			- network-byebnk
+
+	pgadmin:
+		image: dpage/pgadmin4:4.16
+		environment:
+			- PGADMIN_DEFAULT_EMAIL=admin
+			- PGADMIN_DEFAULT_PASSWORD=admin
+		volumes:
+			- volume-pgadmin:/pgadmin4:rw
+			- volume-pgadmin-lib:/var/lib/pgadmin:rw
+			- volume-pgadmin-certs:/certs:rw
+		ports:
+			- 80:80
+		depends_on:
+			- postgres
+		networks:
+			- network-byebnk
+
+networks:
+	network-byebnk:
+		driver: bridge
+
+volumes:
+	volume-potgre:
+	volume-postgre-data:
+	volume-pgadmin:
+	volume-pgadmin-lib:
+	volume-pgadmin-certs:
