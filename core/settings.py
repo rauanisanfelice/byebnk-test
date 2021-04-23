@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cockpit',
+    'drf_yasg',
     'rest_framework',
-    'rest_framework_swagger',
     'rest_framework.authtoken',
 ]
 
@@ -51,15 +51,33 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'MAX_PAGINATE_BY': 100,
+    'COMPACT_JSON': False,
+}
+
+SWAGGER_SETTINGS = {
+    # 'SECURITY_DEFINITIONS': {
+    #     'api_key': {
+    #         'type': 'apiKey',
+    #         'in': 'header',
+    #         'name': 'Authorization'
+    #     }
+    # },
+    'VALIDATOR_URL': 'http://localhost:8000',
 }
 
 ROOT_URLCONF = 'core.urls'
@@ -149,7 +167,6 @@ LOGOUT_URL = 'rest_framework:logout'
 
 # Session
 SESSION_EXPIRE_AT_BROWSER_CLOSE=True
-
 
 
 # Loggin
