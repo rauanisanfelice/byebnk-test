@@ -12,6 +12,14 @@ class AtivosSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AtivosCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Ativos
+        fields = ['nome', 'modalidade']
+
+
 class WalletSerializer(serializers.ModelSerializer):
 
     class Meta:

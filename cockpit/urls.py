@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
-from .views import AtivoList,  \
+from .views import AtivoList, AtivoCreate, AtivosDetail, AtivosUpdateDelete, \
     CustomAuthToken
 
 
@@ -10,11 +10,10 @@ urlpatterns = [
     path('token-auth/', CustomAuthToken.as_view()),
 
     # ATIVO
-    path('ativos/', AtivoList.as_view(), name='ativo-list'),
-    # path('ativos/add/', AtivoCreate.as_view(), name='ativo-create'),
-    # path('ativos/<int:pk>/', AtivoDetail.as_view(), name='ativo-detail'),
-    # path('ativos/<int:pk>/remove/', AtivoRemove.as_view(), name='ativo-remove'),
-    # path('ativos/<int:pk>/update/', AtivoUpdate.as_view(), name='ativo-update'),
+    path('ativos/', AtivoList.as_view(), name='ativo'),
+    path('ativos/add/', AtivoCreate.as_view(), name='ativo-create'),
+    path('ativos/<int:pk>/', AtivosDetail.as_view(), name='ativo-detail'),
+    path('ativos/<int:pk>/', AtivosUpdateDelete.as_view(), name='ativo-update-delete'),
 
     # CARTEIRA
     # path('wallet/', Wallet.as_view(), name='wallet'),
