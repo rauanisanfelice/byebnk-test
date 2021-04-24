@@ -4,6 +4,7 @@ from datetime import  datetime
 
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404
 
 from rest_framework import mixins, generics, status
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -97,6 +98,7 @@ class UserCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
             except Exception as error:
+                logger.error(f'Erro - {erro}')
                 return Response(error, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -262,6 +264,45 @@ class Transacoes(generics.GenericAPIView):
 
     @swagger_auto_schema(tags=['Transações'])
     def post(self, request, *args, **kwargs):
+        try:
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = TransacaoSerializer(data=request.data)
+            if serializer.is_valid():
+                user = User.objects.get(pk=request.user.pk)
+                wallet = get_object_or_404(Wallet, usuario=user)
+                ativo = get_object_or_404(Ativos, pk=serializer.data['ativo'])
+                acao = serializer.data['acao']
+                quantidade = serializer.data['quantidade']
+                preco_unitario = serializer.data['preco_unitario']
+
+                transacao = Transacao(
+                    preco_unitario=preco_unitario,
+                    quantidade=quantidade,
+                    ip_address=self.request.META['REMOTE_ADDR'],
+                    acao=acao,
+                    ativo=ativo,
+                    wallet=wallet,
+                    usuario=user,
+                )
+                
+                wallet.data_alteracao = datetime.now()
+                wallet.saldo_anterior = wallet.saldo_atual
+                if acao == Transacao.TP_APLICACAO:
+                    wallet.saldo_atual += preco_unitario
+                elif acao == Transacao.TP_RESGATE:
+                    wallet.saldo_atual -= preco_unitario
+                else:
+                    logger.error(f'Acao não é válida {acao}')
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+                transacao.save()
+                wallet.save()
+
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as erro:
+            logger.error(f'Erro - {erro}')
+            return Response(erro, status=status.HTTP_400_BAD_REQUEST)
+
