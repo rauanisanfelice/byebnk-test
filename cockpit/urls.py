@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth_views
 
 from .views import AtivoList, AtivoCreate, AtivosDetail, AtivosUpdate, AtivosDelete, \
     UserList, UserDetail, UserCreate, UserDelete, \
-    Transacoes
+    Transacoes, GetWallet
 
 
 urlpatterns = [
@@ -21,15 +21,10 @@ urlpatterns = [
     path('ativos/<int:identificador>/update/', AtivosUpdate.as_view()),
     path('ativos/<int:identificador>/delete/', AtivosDelete.as_view()),
 
-    # CARTEIRA
+    # TRANSACOES
     path('transacoes/', Transacoes.as_view(), name='transacoes'),
 
-    # # CARTEIRA
-    # path('wallet/', Wallet.as_view(), name='wallet'),
-
-    # User
-    # path('users/', include('rest_framework.urls')),
-    # path('users/', UserList.as_view(), name='usuario-list'),
-    # path('users/<int:pk>/', UserDetail.as_view(), name='usuario-detail'),
+    # CARTEIRA
+    path('wallet/', GetWallet.as_view(), name='wallet'),
     
 ]

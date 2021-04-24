@@ -306,3 +306,31 @@ class Transacoes(generics.GenericAPIView):
             logger.error(f'Erro - {erro}')
             return Response(erro, status=status.HTTP_400_BAD_REQUEST)
 
+
+# WALLET
+class GetWallet(generics.GenericAPIView):
+    """Consulta Carteira"""
+
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"Wallet {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Carteira'])
+    def get(self, request, *args, **kwargs):
+
+        try:
+            user = User.objects.get(pk=request.user.pk)
+            wallet = get_object_or_404(Wallet, usuario=user)
+            return Response(model_to_dict(wallet), status=status.HTTP_200_OK)
+        
+        except Exception as erro:
+            logger.error(f'Erro - {erro}')
+            return Response(erro, status=status.HTTP_400_BAD_REQUEST)
+
+        
+        
+
+        
