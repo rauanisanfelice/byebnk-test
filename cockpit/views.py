@@ -169,7 +169,7 @@ class UserDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
         logger.info(f"UserDelete {request.method} ({request.user.username})")
         return super().dispatch(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Usuários'])
+    @swagger_auto_schema(tags=['Usuários'], responses={204: 'Usuário deletado com sucesso.'})
     def delete(self, request, *args, **kwargs):
 
         user = User.objects.get(pk=kwargs['pk'])
@@ -291,7 +291,7 @@ class AtivosDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
         logger.info(f"AtivosDelete {request.method} ({request.user.username})")
         return super().dispatch(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Ativos'])
+    @swagger_auto_schema(tags=['Ativos'], responses={204: 'Ativo deletado com sucesso.'})
     def delete(self, request, *args, **kwargs):
 
         ativo = Ativos.objects.get(pk=kwargs['identificador'])
@@ -369,7 +369,7 @@ class GetWallet(generics.GenericAPIView):
         logger.info(f"Wallet {request.method} ({request.user.username})")
         return super().dispatch(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Carteira'])
+    @swagger_auto_schema(tags=['Carteira'], responses={200: 'Informações da carteira.'})
     def get(self, request, *args, **kwargs):
 
         try:
