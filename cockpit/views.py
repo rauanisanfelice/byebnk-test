@@ -15,14 +15,15 @@ from rest_framework.views import APIView
 
 from drf_yasg.utils import swagger_auto_schema
 
-from .models import Ativos, Wallet, Transacao
+from .models import Ativos, Wallet, Transacao, User
 from .serializers import AtivosSerializer, AtivosCreateSerializer, \
-    WalletSerializer, TransacaoSerializer, UserSerializer
+    WalletSerializer, TransacaoSerializer, UserSerializer, UserCreateSerializer
 
 logger = logging.getLogger(__name__)
 
 
 
+# TOKEN
 class CustomAuthToken(ObtainAuthToken):
     """Solicita token para acesso"""
 
@@ -41,6 +42,110 @@ class CustomAuthToken(ObtainAuthToken):
         })
 
 
+# USUARIOS
+class UserList(mixins.ListModelMixin, generics.GenericAPIView):
+    """Lista todos usuários."""
+
+    # authentication_classes = [SessionAuthentication, BasicAuthentication]
+    # permission_classes = [IsAuthenticated]
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"UserList {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Usuários'])
+    def get(self, request, *args, **kwargs):
+        """Lista todos ativos."""
+        return self.list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """ Lista somente os ativos """
+        return User.objects.filter(is_active=True)
+
+
+class UserDetail(generics.RetrieveAPIView):
+    """Informações do usuário."""
+
+    # authentication_classes = [SessionAuthentication, BasicAuthentication]
+    # permission_classes = [IsAuthenticated]
+    
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"UserDetail {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Usuários'],)
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class UserCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    """Adiciona um novo Usuário"""
+
+    permission_classes = [AllowAny]
+    queryset = User.objects.all()
+    serializer_class = UserCreateSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"UserCreate {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Usuários'],)
+    def post(self, request, *args, **kwargs):
+        serializer = UserCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                user = User.objects.create_user(
+                    username=serializer.data['username'],
+                    password=serializer.data['password'],
+                    first_name=serializer.data['first_name'],
+                    last_name=serializer.data['last_name'],
+                    email=serializer.data['email'],
+                )
+                
+                Wallet.objects.create(
+                    saldo_anterior=0,
+                    saldo_atual=0,
+                    data_alteracao=datetime.now(),
+                    usuario=user,
+                )
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            except Exception as error:
+                return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
+    """Remove Usuário"""
+
+    # authentication_classes = [TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = UserCreateSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"UserDelete {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Usuários'])
+    def delete(self, request, *args, **kwargs):
+
+        user = User.objects.get(pk=kwargs['pk'])
+        user.is_active = False
+        user.save()
+
+        return Response(model_to_dict(user), status=status.HTTP_204_NO_CONTENT)
+        
+
+# ATIVOS
 class AtivoList(mixins.ListModelMixin, generics.GenericAPIView):
     """Lista de Ativos"""
 
@@ -158,4 +263,22 @@ class AtivosDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
         ativo.save()
 
         return Response(model_to_dict(ativo), status=status.HTTP_204_NO_CONTENT)
+        
+
+# TRANSACOES
+class Transacoes(generics.GenericAPIView):
+    """Realiza transações"""
+
+    # authentication_classes = [TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
+    serializer_class = TransacaoSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        logger.info(f"Transacoes {request.method} ({request.user.username})")
+        return super().dispatch(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['Transações'])
+    def post(self, request, *args, **kwargs):
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
         

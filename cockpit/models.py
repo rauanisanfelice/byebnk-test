@@ -68,7 +68,7 @@ class Transacao(models.Model):
     ip_address = models.GenericIPAddressField()
     acao = models.CharField(verbose_name="Ação", max_length=50, choices=CHO_ACAO, default=TP_APLICACAO)
 
-    ativo = models.ForeignKey(Ativos, on_delete=models.PROTECT)
+    ativo = models.ForeignKey(Ativos, verbose_name="ID Ativo", on_delete=models.PROTECT)
     wallet = models.ForeignKey(Wallet, on_delete=models.PROTECT)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT)
 
