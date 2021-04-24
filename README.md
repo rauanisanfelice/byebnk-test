@@ -11,7 +11,7 @@ Conforme proposto no [Desafio técnico backend - Byebnk](https://gitlab.com/byeb
 * python-decouple
 * psycopg2-binary
 
-![API](https://raw.githubusercontent.com/rauanisanfelice/byebnk-test/blob/develop/static/img/API_Byebnk.png?raw=true)
+![API](./static/img/API_Byebnk.png?raw=true)
 
 ## Instruções
 
