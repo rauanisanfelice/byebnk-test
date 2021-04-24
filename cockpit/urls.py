@@ -3,12 +3,10 @@ from django.contrib.auth import views as auth_views
 
 from .views import AtivoList, AtivoCreate, AtivosDetail, AtivosUpdate, AtivosDelete, \
     UserList, UserDetail, UserCreate, UserDelete, \
-    Transacoes, CustomAuthToken
+    Transacoes
 
 
 urlpatterns = [
-
-    path('token-auth/', CustomAuthToken.as_view()),
 
     # USUÁRIOS
     path('usuarios/', UserList.as_view()),
