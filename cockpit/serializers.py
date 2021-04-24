@@ -33,7 +33,7 @@ class TransacaoSerializer(serializers.ModelSerializer):
     class Meta:
 
         model = Transacao
-        fields = ['preco_unitario', 'quantidade', 'acao', 'ativo', 'wallet']
+        fields = ['preco_unitario', 'quantidade', 'acao', 'ativo']
 
 
 class UserSerializer(serializers.ModelSerializer):
