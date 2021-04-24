@@ -63,7 +63,8 @@ class Transacao(models.Model):
     ]
 
     identificador = models.BigAutoField(primary_key=True)
-    preco_unitario = models.FloatField(verbose_name="Valor")
+    preco_unitario = models.FloatField(verbose_name="Valor unitário")
+    preco_total = models.FloatField(verbose_name="Valor total")
     quantidade = models.IntegerField(verbose_name="Valor")
     ip_address = models.GenericIPAddressField()
     acao = models.CharField(verbose_name="Ação", max_length=50, choices=CHO_ACAO, default=TP_APLICACAO)
@@ -78,3 +79,4 @@ class Transacao(models.Model):
         ordering = ["data_transacao"]
         verbose_name = 'Transação'
         verbose_name_plural = 'Transações'
+    

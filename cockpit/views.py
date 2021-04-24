@@ -1,5 +1,6 @@
 import logging
 
+from json import dumps
 from datetime import  datetime
 
 from django.contrib.auth.models import User
@@ -23,6 +24,18 @@ from .serializers import AtivosSerializer, AtivosCreateSerializer, \
 logger = logging.getLogger(__name__)
 
 
+
+def get_or_create_wallet(usuario:object) -> object:
+    try:
+        wallet = Wallet.objects.get(usuario=usuario)
+    except:
+        wallet = Wallet.objects.create(
+            saldo_anterior=0,
+            saldo_atual=0,
+            data_alteracao=datetime.now(),
+            usuario=usuario,
+        )
+    return wallet
 
 # USUARIOS
 class UserList(mixins.ListModelMixin, generics.GenericAPIView):
@@ -269,14 +282,16 @@ class Transacoes(generics.GenericAPIView):
             serializer = TransacaoSerializer(data=request.data)
             if serializer.is_valid():
                 user = User.objects.get(pk=request.user.pk)
-                wallet = get_object_or_404(Wallet, usuario=user)
+                wallet = get_or_create_wallet(usuario=user)
                 ativo = get_object_or_404(Ativos, pk=serializer.data['ativo'])
                 acao = serializer.data['acao']
                 quantidade = serializer.data['quantidade']
                 preco_unitario = serializer.data['preco_unitario']
+                valor_total = preco_unitario * quantidade
 
                 transacao = Transacao(
                     preco_unitario=preco_unitario,
+                    preco_total=valor_total,
                     quantidade=quantidade,
                     ip_address=self.request.META['REMOTE_ADDR'],
                     acao=acao,
@@ -288,9 +303,9 @@ class Transacoes(generics.GenericAPIView):
                 wallet.data_alteracao = datetime.now()
                 wallet.saldo_anterior = wallet.saldo_atual
                 if acao == Transacao.TP_APLICACAO:
-                    wallet.saldo_atual += preco_unitario
+                    wallet.saldo_atual += valor_total
                 elif acao == Transacao.TP_RESGATE:
-                    wallet.saldo_atual -= preco_unitario
+                    wallet.saldo_atual -= valor_total
                 else:
                     logger.error(f'Acao não é válida {acao}')
                     return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -298,7 +313,7 @@ class Transacoes(generics.GenericAPIView):
                 transacao.save()
                 wallet.save()
 
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response(model_to_dict(transacao), status=status.HTTP_201_CREATED)
             
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
@@ -313,6 +328,7 @@ class GetWallet(generics.GenericAPIView):
 
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class = Wallet
 
     def dispatch(self, request, *args, **kwargs):
         logger.info(f"Wallet {request.method} ({request.user.username})")
@@ -323,14 +339,31 @@ class GetWallet(generics.GenericAPIView):
 
         try:
             user = User.objects.get(pk=request.user.pk)
-            wallet = get_object_or_404(Wallet, usuario=user)
-            return Response(model_to_dict(wallet), status=status.HTTP_200_OK)
+            wallet = get_or_create_wallet(usuario=user)
+            
+            carteira = {}
+            for trasnsacao in wallet.transacao_set.all():
+                if trasnsacao.ativo.nome not in carteira:
+                    carteira[trasnsacao.ativo.nome] = 0
+                
+                if trasnsacao.acao == Transacao.TP_APLICACAO:
+                    carteira[trasnsacao.ativo.nome] += trasnsacao.preco_total
+                elif trasnsacao.acao == Transacao.TP_RESGATE:
+                    carteira[trasnsacao.ativo.nome] -= trasnsacao.preco_total
+                else:
+                    logger.error(f'Acao não é válida {acao}')
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                
+            
+            retorno = {
+                "saldo_anterior": wallet.saldo_anterior,
+                "saldo_atual": wallet.saldo_atual,
+                "data_alteracao": wallet.data_alteracao,
+                "carteira": carteira,
+            }
+            return Response(retorno, status=status.HTTP_200_OK)
         
         except Exception as erro:
             logger.error(f'Erro - {erro}')
             return Response(erro, status=status.HTTP_400_BAD_REQUEST)
 
-        
-        
-
-        
