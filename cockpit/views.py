@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
 
 from rest_framework import mixins, generics, status
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -23,32 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 
-# TOKEN
-class CustomAuthToken(ObtainAuthToken):
-    """Solicita token para acesso"""
-
-    permission_classes = [AllowAny]
-
-    @swagger_auto_schema(tags=['Token'],)
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data,
-                                           context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'email': user.email
-        })
-
-
 # USUARIOS
 class UserList(mixins.ListModelMixin, generics.GenericAPIView):
     """Lista todos usuários."""
 
-    # authentication_classes = [SessionAuthentication, BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
-
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -69,9 +49,8 @@ class UserList(mixins.ListModelMixin, generics.GenericAPIView):
 class UserDetail(generics.RetrieveAPIView):
     """Informações do usuário."""
 
-    # authentication_classes = [SessionAuthentication, BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
-    
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -126,8 +105,8 @@ class UserCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class UserDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
     """Remove Usuário"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer
 
@@ -149,8 +128,8 @@ class UserDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
 class AtivoList(mixins.ListModelMixin, generics.GenericAPIView):
     """Lista de Ativos"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Ativos.objects.all()
     serializer_class = AtivosSerializer
 
@@ -174,8 +153,8 @@ class AtivoList(mixins.ListModelMixin, generics.GenericAPIView):
 class AtivoCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
     """Adiciona um novo Ativo"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Ativos.objects.all()
     serializer_class = AtivosCreateSerializer
 
@@ -190,8 +169,12 @@ class AtivoCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
         serializer.status_ativo = True
 
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            ativo = Ativos.objects.create(
+                nome=serializer.data['nome'],
+                modalidade=serializer.data['modalidade'],
+                user_inclusao=request.user.username,
+            )
+            return Response(model_to_dict(ativo), status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -199,8 +182,8 @@ class AtivoCreate(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class AtivosDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     """Informações do Ativo"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Ativos.objects.all()
     serializer_class = AtivosSerializer
 
@@ -216,8 +199,8 @@ class AtivosDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class AtivosUpdate(mixins.UpdateModelMixin, generics.GenericAPIView):
     """Atualiza dados de um Ativo"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Ativos.objects.all()
     serializer_class = AtivosCreateSerializer
 
@@ -244,8 +227,8 @@ class AtivosUpdate(mixins.UpdateModelMixin, generics.GenericAPIView):
 class AtivosDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
     """Remove Ativo"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Ativos.objects.all()
     serializer_class = AtivosCreateSerializer
 
@@ -269,8 +252,8 @@ class AtivosDelete(mixins.DestroyModelMixin, generics.GenericAPIView):
 class Transacoes(generics.GenericAPIView):
     """Realiza transações"""
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = TransacaoSerializer
 
     def dispatch(self, request, *args, **kwargs):
