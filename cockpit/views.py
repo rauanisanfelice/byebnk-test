@@ -26,6 +26,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_or_create_wallet(usuario:object) -> object:
+    """Busca carteira ou cria uma nova para usuário.
+
+    Args:
+        usuario (object): Objeto usuário
+
+    Returns:
+        object: Carteira do usuário
+    """
+    
     try:
         wallet = Wallet.objects.get(usuario=usuario)
     except:
@@ -35,7 +44,33 @@ def get_or_create_wallet(usuario:object) -> object:
             data_alteracao=datetime.now(),
             usuario=usuario,
         )
+    
     return wallet
+
+
+def update_wallet(wallet:object, acao:str, valor_total:float) -> object:
+    """Atualiza dados da carteira do usuário
+
+    Args:
+        wallet (object): Objeto Carteira do usuário
+        acao (str): aplicacao | resgate
+
+    Returns:
+        object: Retorna Carteira atualizada
+    """
+
+    wallet.data_alteracao = datetime.now()
+    wallet.saldo_anterior = wallet.saldo_atual
+    if acao == Transacao.TP_APLICACAO:
+        wallet.saldo_atual += valor_total
+    elif acao == Transacao.TP_RESGATE:
+        wallet.saldo_atual -= valor_total
+    else:
+        logger.error(f'Acao não é válida {acao}')
+        return None
+    
+    return wallet
+
 
 # USUARIOS
 class UserList(mixins.ListModelMixin, generics.GenericAPIView):
@@ -300,14 +335,8 @@ class Transacoes(generics.GenericAPIView):
                     usuario=user,
                 )
                 
-                wallet.data_alteracao = datetime.now()
-                wallet.saldo_anterior = wallet.saldo_atual
-                if acao == Transacao.TP_APLICACAO:
-                    wallet.saldo_atual += valor_total
-                elif acao == Transacao.TP_RESGATE:
-                    wallet.saldo_atual -= valor_total
-                else:
-                    logger.error(f'Acao não é válida {acao}')
+                wallet = update_wallet(update_wallet, acao, valor_total)
+                if wallet is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
                 transacao.save()
