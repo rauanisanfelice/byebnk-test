@@ -92,8 +92,7 @@ class TransacaoTestCase(TestCase):
             )
             self.wallet = update_wallet(self.wallet, acao, preco_total)
             if self.wallet is None:
-                self.fail("Exception Rendering is not working. Try opening"
-                            "/exception/. It should raise a TestException.")
+                return False
 
         self.assertEqual(self.wallet.saldo_atual, 10)
 

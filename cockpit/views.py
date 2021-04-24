@@ -58,6 +58,10 @@ def update_wallet(wallet:object, acao:str, valor_total:float) -> object:
     Returns:
         object: Retorna Carteira atualizada
     """
+    
+    if valor_total > wallet.saldo_atual and acao == Transacao.TP_RESGATE:
+        raise Exception("Valor de resgate maior do valor em carteira!")
+        return None
 
     wallet.data_alteracao = datetime.now()
     wallet.saldo_anterior = wallet.saldo_atual
@@ -67,6 +71,7 @@ def update_wallet(wallet:object, acao:str, valor_total:float) -> object:
         wallet.saldo_atual -= valor_total
     else:
         logger.error(f'Acao não é válida {acao}')
+        raise Exception("Acao não é válida {acao}")
         return None
     
     return wallet
@@ -269,7 +274,7 @@ class AtivosUpdate(mixins.UpdateModelMixin, generics.GenericAPIView):
             ativo.data_alteracao = datetime.now()
             ativo.save()
 
-            return Response(model_to_dict(ativo), status=status.HTTP_204_NO_CONTENT)
+            return Response(model_to_dict(ativo), status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUES)
 
@@ -333,9 +338,10 @@ class Transacoes(generics.GenericAPIView):
                     ativo=ativo,
                     wallet=wallet,
                     usuario=user,
+                    data_transacao=datetime.now()
                 )
                 
-                wallet = update_wallet(update_wallet, acao, valor_total)
+                wallet = update_wallet(wallet, acao, valor_total)
                 if wallet is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -346,9 +352,9 @@ class Transacoes(generics.GenericAPIView):
             
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        except Exception as erro:
-            logger.error(f'Erro - {erro}')
-            return Response(erro, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as error:
+            logger.error(f'Erro - {error}')
+            return Response(str(error), status=status.HTTP_400_BAD_REQUEST)
 
 
 # WALLET
